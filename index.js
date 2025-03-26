@@ -62,6 +62,7 @@
 
 import express from "express";
 import uniqid from "uniqid";
+import morgan from "morgan";
 
 const app = express();
 
@@ -71,20 +72,31 @@ const mFn = (req, res, next) => {
   next();
 };
 
+app.use(morgan("dev"));
 app.use(express.json());
-app.use(mFn);
+// app.use(mFn);
 
 const products = [];
 
 app.get("/product", (req, res) => {
-  res.status(200).json(products);
+  console.log(req.query);
+  res.status(200).json({ products, message: "Get request" });
 });
 
 app.post("/product", (req, res) => {
-  const { body } = req;
-  products.push({ id: uniqid(), ...body });
+  const { title, description, price } = req.body;
+
+  if (!title || !description || !price) {
+    return res
+      .status(400)
+      .json({ message: "Please add title, description, and price" });
+  }
+
+  const newProduct = { id: uniqid(), title, description, price };
+  products.push(newProduct);
   console.log("POST method");
-  res.status(201).json({ message: "Product added" });
+
+  res.status(201).json({ message: "Product added", product: newProduct });
 });
 
 app.get("/product/:id", (req, res) => {
